@@ -131,7 +131,7 @@ doc.recompute()
 
 
 ---
-![[MasonJarCoupler/images/Screenshot_20241125_182536.png]]
+![[![MasonJarCoupler/images/Screenshot_20241125_182536.png](https://github.com/Pwoodlock/FreeCad/blob/main/Projects/MasonJarCoupler/images/Screenshot_20241125_182536.png)]]
 
 
 
