@@ -1,21 +1,19 @@
 # Mason Jar Coupler  ALPHA 0.0.1
+
+- Designed in[ FreeCad 1.0.0](https://www.freecad.org/)
+- Python 3.11 included with [AppImage](https://www.freecad.org/downloads.php)
+
+
+
+
+Contributors:
+---
+- Patrick Woodlock
+- Weblix
 ---
 
 > [!NOTE]
-> Currently under ALPHA Development and this is just committed recently to inform our members in "Plants In Jars" on discord.
-
-
-
-
-- Designed in FreeCad 1.0.0
-- Python 3.11
----
-
-
-
-
-
-
+> Currently under ALPHA Development and this is just committed recently to inform  members in "Plants In Jars" on discord.
 
 
 
@@ -24,23 +22,29 @@
 > Main goals for this project are as follows
 - [x] Parametric Input via SpreadSheet
 - [x] Breakpoint and debugging options.
-- [ ] Various thread sizes for different types of standard Pyrex Jars / Mason etc.
-- [ ] Output a STL File for 3D Printing / Upload to PCBWay / JLCPCB etc.. Without Errors 
+- [ ] Flat surface to both be used with a Rotating Jar Tilting Machine & to house the synthetic filter that's also parametric to suit peoples needs.
+- [ ] Mason Wide Mouth Threads
+- [ ] Mason Standard Mouth Threads
+- [ ] Various Other Standard Autoclave Resistant Jars Threads
+- [ ] Documentation for Editing & Exporting the files for printing
+- [ ] Group Production for 3D Printing for EU Based Members or US etc. 
+	- [ ] [PCBWay](https://www.pcbway.com/rapid-prototyping/manufacture/?type=2&reffercode=TOP0)
+	- [ ] [JLC3DP](https://jlc3dp.com/3d-printing-quote)
 
 
 
-More information to follow further down the line.
 
 
 
 
-Contributors:
+
+
+
+
+
+
+
 ---
-<<<<<<< Updated upstream
-- Patrick Woodlock
-- Webklex
-=======
-<<<<<<< HEAD
 
 > [!NOTE]
 > 
@@ -134,11 +138,6 @@ doc.recompute()
 
 
 
-=======
-- Patrick Woodlock
-- Webklex
->>>>>>> 2e0327d11e9fc3d9f75e732b2a729571eb06fee8
->>>>>>> Stashed changes
 
 
 
