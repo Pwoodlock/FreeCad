@@ -1,136 +1,123 @@
-#############################################################################################################################################################
-#  This is a baseline code for the project of the "Mason Jar Coupler" 
-# 
-#  Developed by Patrick Woodlock (SplantedTanx) & Webex for the genernal Public
-#
-#  
-#  This in heavy Alpha Stage and might and probably will have some form of bugs on the final output of the part.
-#
-#
-#       Tools Used..
-#       FreeCad 1.0.0
-#       Python 3.11
-#       Git
-#       Your Fav IDE..
-
-
-
 import FreeCAD as App
 import Part
 import math
 
-def create_base_mjc():
+def create_curved_mjc():
+    doc = App.newDocument('MJC')
+    
+    # Create spreadsheet
+    sheet = doc.addObject('Spreadsheet::Sheet', 'Parameters')
+    
+    # Set up parameters
+    sheet.set('A1', 'Diameter')
+    sheet.set('B1', '80')
+    sheet.set('C1', 'Outer diameter of the coupler')
+    
+    sheet.set('A2', 'Height')
+    sheet.set('B2', '50')
+    sheet.set('C2', 'Total height of the coupler')
+    
+    sheet.set('A3', 'WallThickness')
+    sheet.set('B3', '10')
+    sheet.set('C3', 'Thickness of the walls')
+    
+    sheet.set('A4', 'FluteCount')
+    sheet.set('B4', '18')
+    sheet.set('C4', 'Number of flutes around the circumference')
+    
+    sheet.set('A5', 'FluteDepth')
+    sheet.set('B5', '3')
+    sheet.set('C5', 'Maximum depth of flute cuts')
+    
+    sheet.set('A6', 'FluteWidth')
+    sheet.set('B6', '16')
+    sheet.set('C6', 'Width of each flute')
+    
+    # Set aliases for parameters
+    sheet.setAlias('B1', 'Diameter')
+    sheet.setAlias('B2', 'Height')
+    sheet.setAlias('B3', 'WallThickness')
+    sheet.setAlias('B4', 'FluteCount')
+    sheet.setAlias('B5', 'FluteDepth')
+    sheet.setAlias('B6', 'FluteWidth')
+    
+    doc.recompute()
+    
+    # Create the body object first
+    body = doc.addObject("Part::Feature", "Body")
+    
+    # Read parameters
+    outer_radius = float(sheet.get('B1')) / 2
+    height = float(sheet.get('B2'))
+    wall_thickness = float(sheet.get('B3'))
+    flute_count = int(sheet.get('B4'))
+    flute_depth = float(sheet.get('B5'))
+    flute_width = float(sheet.get('B6'))
+    
+    # Create base cylinders
+    outer_cylinder = Part.makeCylinder(outer_radius, height)
+    inner_cylinder = Part.makeCylinder(outer_radius - wall_thickness, height)
+    
+    # Create curved flutes
+    for i in range(flute_count):
+        angle = 360.0 / flute_count * i
+        
+        # Create points for curved profile
+        points = []
+        steps = 16  # Resolution of curve
+        
+        # Start point at outer radius
+        points.append(App.Vector(outer_radius, -flute_width/2, 0))
+        
+        # Create curved section
+        for j in range(steps + 1):
+            t = j * math.pi / steps
+            x = outer_radius - flute_depth * math.sin(t)
+            y = flute_width/2 * math.cos(t)
+            points.append(App.Vector(x, y, 0))
+        
+        # End point at outer radius
+        points.append(App.Vector(outer_radius, flute_width/2, 0))
+        
+        # Create wire from points
+        wire = Part.makePolygon(points)
+        face = Part.Face(Part.Wire([wire]))
+        
+        # Extrude profile
+        flute = face.extrude(App.Vector(0, 0, height))
+        
+        # Rotate to position
+        flute.rotate(App.Vector(0,0,0), App.Vector(0,0,1), angle)
+        
+        # Cut flute from cylinder
+        outer_cylinder = outer_cylinder.cut(flute)
+    
+    # Create final shape
+    final_shape = outer_cylinder.cut(inner_cylinder)
+    body.Shape = final_shape
+    
+    # Update view
+    doc.recompute()
+    
     try:
-        # Create a Document for this project MJC ( Mason Jar Coupler )
-        doc = App.newDocument('MJC')
-        print("Document created")
-        
-        # Create spreadsheet so we can add our parameters that we can edit down the line.
-        sheet = doc.addObject('Spreadsheet::Sheet', 'Parameters')
-        
-        # Set up parameters for our spreadsheet in FreeCad to enable Parametric Programming and Editing.
-        sheet.set('A1', 'Diameter')
-        sheet.set('B1', '80')  # mm
-        sheet.set('C1', 'Outer diameter of the coupler')
-        
-        sheet.set('A2', 'Height')
-        sheet.set('B2', '50')  # mm
-        sheet.set('C2', 'Total height of the coupler')
-        
-        sheet.set('A3', 'WallThickness')
-        sheet.set('B3', '10')  # mm
-        sheet.set('C3', 'Thickness of the walls')
-        
-        sheet.set('A4', 'FluteCount')
-        sheet.set('B4', '18')
-        sheet.set('C4', 'Number of flutes around the circumference')
-        
-        sheet.set('A5', 'FluteDepth')
-        sheet.set('B5', '3')  # mm
-        sheet.set('C5', 'Depth of each flute cut')
-        
-        sheet.set('A6', 'FluteWidth')
-        sheet.set('B6', '8')  # mm
-        sheet.set('C6', 'Width of each flute')
-        
-        # Create aliases for easy reference
-        sheet.setAlias('B1', 'Diameter')
-        sheet.setAlias('B2', 'Height')
-        sheet.setAlias('B3', 'WallThickness')
-        sheet.setAlias('B4', 'FluteCount')
-        sheet.setAlias('B5', 'FluteDepth')
-        sheet.setAlias('B6', 'FluteWidth')
-        
-        # Force recompute after setting values
-        doc.recompute()
-        print("Spreadsheet created and parameters set")
-        
-        # Create body object
-        body = doc.addObject("Part::Feature", "Body")
-        
-        # Read parameters from spreadsheet
-        outer_radius = float(sheet.get('B1')) / 2
-        height = float(sheet.get('B2'))
-        wall_thickness = float(sheet.get('B3'))
-        flute_count = int(sheet.get('B4'))
-        flute_depth = float(sheet.get('B5'))
-        flute_width = float(sheet.get('B6'))
-        
-        print(f"Creating cylinder with radius {outer_radius} and height {height}")
-        
-        # Create base cylinders
-        outer_cylinder = Part.makeCylinder(outer_radius, height)
-        inner_cylinder = Part.makeCylinder(outer_radius - wall_thickness, height)
-        
-        # Create flutes
-        for i in range(flute_count):
-            try:
-                angle = 360.0 / flute_count * i
-                
-                # Simple rectangular cut
-                box = Part.makeBox(flute_depth, flute_width, height)
-                
-                # Position box at outer radius
-                box.translate(App.Vector(outer_radius - flute_depth, -flute_width/2, 0))
-                
-                # Rotate to position
-                box.rotate(App.Vector(0,0,0), App.Vector(0,0,1), angle)
-                
-                # Cut flute from cylinder
-                outer_cylinder = outer_cylinder.cut(box)
-                
-            except Exception as e:
-                print(f"Error creating flute {i}: {str(e)}")
-                return None
-        
-        # Create hollow cylinder
-        final_shape = outer_cylinder.cut(inner_cylinder)
-        body.Shape = final_shape
-        
-        # Update view
-        doc.recompute()
-        
-        try:
-            import FreeCADGui
-            FreeCADGui.SendMsgToActiveView("ViewFit")
-            FreeCADGui.activeDocument().activeView().viewAxonometric()
-        except:
-            print("Note: GUI updates skipped (console mode)")
-        
-        return doc
-        
-    except Exception as e:
-        print(f"Error in main function: {str(e)}")
-        return None
+        import FreeCADGui
+        FreeCADGui.SendMsgToActiveView("ViewFit")
+        FreeCADGui.activeDocument().activeView().viewAxonometric()
+    except:
+        print("Note: GUI updates skipped (console mode)")
+    
+    return doc
 
 if __name__ == '__main__':
-    print("Starting step 1 - Creating parametric base structure...")
+    print("Starting creation of curved flute design...")
     try:
-        doc = create_base_mjc()
+        doc = create_curved_mjc()
         if doc:
-            print("Parametric base structure created successfully")
+            print("Model created successfully")
             print("Open the 'Parameters' spreadsheet to modify values")
+            print("\nTo update the model after changing parameters, run:")
+            print("create_curved_mjc()")
         else:
-            print("Failed to create base structure")
+            print("Failed to create model")
     except Exception as e:
         print(f"Error running script: {str(e)}")
