@@ -1,26 +1,88 @@
+#############################################################################################################################################################
+#  This is a baseline code for the project of the "Mason Jar Coupler" 
+# 
+#  Developed by Patrick Woodlock (SplantedTanx) & Webex for the genernal Public
+#
+#  
+#  This in heavy Alpha Stage and might and probably will have some form of bugs on the final output of the part.
+#
+#
+#       Tools Used..
+#       FreeCad 1.0.0
+#       Python 3.11
+#       Git
+#       Your Fav IDE..
+
+
+
 import FreeCAD as App
 import Part
 import math
 
 def create_base_mjc():
     try:
-        # Create new document
+        # Create a Document for this project MJC ( Mason Jar Coupler )
         doc = App.newDocument('MJC')
         print("Document created")
         
-        # Basic parameters - we can adjust these
-        outer_radius = 40  # 80mm diameter
-        height = 50
-        wall_thickness = 10
-        flute_count = 18
-        flute_depth = 3
-        flute_width = 8
+        # Create spreadsheet so we can add our parameters that we can edit down the line.
+        sheet = doc.addObject('Spreadsheet::Sheet', 'Parameters')
+        
+        # Set up parameters for our spreadsheet in FreeCad to enable Parametric Programming and Editing.
+        sheet.set('A1', 'Diameter')
+        sheet.set('B1', '80')  # mm
+        sheet.set('C1', 'Outer diameter of the coupler')
+        
+        sheet.set('A2', 'Height')
+        sheet.set('B2', '50')  # mm
+        sheet.set('C2', 'Total height of the coupler')
+        
+        sheet.set('A3', 'WallThickness')
+        sheet.set('B3', '10')  # mm
+        sheet.set('C3', 'Thickness of the walls')
+        
+        sheet.set('A4', 'FluteCount')
+        sheet.set('B4', '18')
+        sheet.set('C4', 'Number of flutes around the circumference')
+        
+        sheet.set('A5', 'FluteDepth')
+        sheet.set('B5', '3')  # mm
+        sheet.set('C5', 'Depth of each flute cut')
+        
+        sheet.set('A6', 'FluteWidth')
+        sheet.set('B6', '8')  # mm
+        sheet.set('C6', 'Width of each flute')
+        
+        # Create aliases for easy reference
+        sheet.setAlias('B1', 'Diameter')
+        sheet.setAlias('B2', 'Height')
+        sheet.setAlias('B3', 'WallThickness')
+        sheet.setAlias('B4', 'FluteCount')
+        sheet.setAlias('B5', 'FluteDepth')
+        sheet.setAlias('B6', 'FluteWidth')
+        
+        # Force recompute after setting values
+        doc.recompute()
+        print("Spreadsheet created and parameters set")
+        
+        # Create body object
+        body = doc.addObject("Part::Feature", "Body")
+        
+        # Read parameters from spreadsheet
+        outer_radius = float(sheet.get('B1')) / 2
+        height = float(sheet.get('B2'))
+        wall_thickness = float(sheet.get('B3'))
+        flute_count = int(sheet.get('B4'))
+        flute_depth = float(sheet.get('B5'))
+        flute_width = float(sheet.get('B6'))
+        
+        print(f"Creating cylinder with radius {outer_radius} and height {height}")
         
         # Create base cylinders
         outer_cylinder = Part.makeCylinder(outer_radius, height)
         inner_cylinder = Part.makeCylinder(outer_radius - wall_thickness, height)
         
-        # Create straight flutes
+        # Create flutes
         for i in range(flute_count):
             try:
                 angle = 360.0 / flute_count * i
@@ -43,9 +105,6 @@ def create_base_mjc():
         
         # Create hollow cylinder
         final_shape = outer_cylinder.cut(inner_cylinder)
-        
-        # Create the final part
-        body = doc.addObject("Part::Feature", "Body")
         body.Shape = final_shape
         
         # Update view
@@ -65,11 +124,12 @@ def create_base_mjc():
         return None
 
 if __name__ == '__main__':
-    print("Starting step 1 - Creating base structure...")
+    print("Starting step 1 - Creating parametric base structure...")
     try:
         doc = create_base_mjc()
         if doc:
-            print("Base structure created successfully")
+            print("Parametric base structure created successfully")
+            print("Open the 'Parameters' spreadsheet to modify values")
         else:
             print("Failed to create base structure")
     except Exception as e:
