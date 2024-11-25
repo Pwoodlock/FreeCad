@@ -1,0 +1,76 @@
+import FreeCAD as App
+import Part
+import math
+
+def create_base_mjc():
+    try:
+        # Create new document
+        doc = App.newDocument('MJC')
+        print("Document created")
+        
+        # Basic parameters - we can adjust these
+        outer_radius = 40  # 80mm diameter
+        height = 50
+        wall_thickness = 10
+        flute_count = 18
+        flute_depth = 3
+        flute_width = 8
+        
+        # Create base cylinders
+        outer_cylinder = Part.makeCylinder(outer_radius, height)
+        inner_cylinder = Part.makeCylinder(outer_radius - wall_thickness, height)
+        
+        # Create straight flutes
+        for i in range(flute_count):
+            try:
+                angle = 360.0 / flute_count * i
+                
+                # Simple rectangular cut
+                box = Part.makeBox(flute_depth, flute_width, height)
+                
+                # Position box at outer radius
+                box.translate(App.Vector(outer_radius - flute_depth, -flute_width/2, 0))
+                
+                # Rotate to position
+                box.rotate(App.Vector(0,0,0), App.Vector(0,0,1), angle)
+                
+                # Cut flute from cylinder
+                outer_cylinder = outer_cylinder.cut(box)
+                
+            except Exception as e:
+                print(f"Error creating flute {i}: {str(e)}")
+                return None
+        
+        # Create hollow cylinder
+        final_shape = outer_cylinder.cut(inner_cylinder)
+        
+        # Create the final part
+        body = doc.addObject("Part::Feature", "Body")
+        body.Shape = final_shape
+        
+        # Update view
+        doc.recompute()
+        
+        try:
+            import FreeCADGui
+            FreeCADGui.SendMsgToActiveView("ViewFit")
+            FreeCADGui.activeDocument().activeView().viewAxonometric()
+        except:
+            print("Note: GUI updates skipped (console mode)")
+        
+        return doc
+        
+    except Exception as e:
+        print(f"Error in main function: {str(e)}")
+        return None
+
+if __name__ == '__main__':
+    print("Starting step 1 - Creating base structure...")
+    try:
+        doc = create_base_mjc()
+        if doc:
+            print("Base structure created successfully")
+        else:
+            print("Failed to create base structure")
+    except Exception as e:
+        print(f"Error running script: {str(e)}")
