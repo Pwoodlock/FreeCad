@@ -36,7 +36,7 @@ More information to follow further down the line.
 
 Contributors:
 ---
-- Patrick Woodlock (SplantedTanx)
+- Patrick Woodlock
 - Webklex
 
 
