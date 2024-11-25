@@ -8,42 +8,66 @@ def create_curved_mjc():
     # Create spreadsheet
     sheet = doc.addObject('Spreadsheet::Sheet', 'Parameters')
     
-    # Set up parameters
+    #################################################################################
+    #               *** Flute Cuts - Fillets - Main Coupler Body
+    #    
     sheet.set('A1', 'Diameter')
     sheet.set('B1', '80')
     sheet.set('C1', 'Outer diameter of the coupler')
-    
     sheet.set('A2', 'Height')
     sheet.set('B2', '50')
     sheet.set('C2', 'Total height of the coupler')
-    
     sheet.set('A3', 'WallThickness')
     sheet.set('B3', '10')
     sheet.set('C3', 'Thickness of the walls')
-    
     sheet.set('A4', 'FluteCount')
     sheet.set('B4', '18')
     sheet.set('C4', 'Number of flutes around the circumference')
-    
     sheet.set('A5', 'FluteDepth')
-    sheet.set('B5', '3')
+    sheet.set('B5', '1') # 3
     sheet.set('C5', 'Maximum depth of flute cuts')
-    
     sheet.set('A6', 'FluteWidth')
     sheet.set('B6', '16')
     sheet.set('C6', 'Width of each flute')
     
-    # Set aliases for parameters
+    #################################################################################
+    #    Extruded Vent Hole and surfaces Section for synthetic filter patch
+    #
+    sheet.set('A7', 'VentHoleDiameter')
+    sheet.set('B7', '2.0')
+    sheet.set('C7', 'Diameter of the vent hole in mm')
+    sheet.set('A8', 'VentSurfaceDiameter')
+    sheet.set('B8', '22.0') # For instance, If you use a 20mm Synthetic Patch then enlarge it by a factor or two "Hence 22mm for a 20mm Patch" Completely optional !
+    sheet.set('C8', 'Diameter of the external vent surface in mm')
+    sheet.set('A9', 'VentSurfaceHeight')
+    sheet.set('B9', '8.0')      # Adjust this value to be less than or equal to the wall thickness
+    sheet.set('C9', 'Height of the external vent surface in mm')
+    sheet.set('A10', 'VentHoleHeight')
+    sheet.set('B10', '25.0') # To change the Actual Extruded Vent patch placement surface other than in the center / Middle of the actual Coupler.  ie. The actual Main Body Height of the coupler = 50 mm so half of this is 25 mm
+    sheet.set('C10', 'Height position of vent hole from bottom of main coupler')
+    sheet.set('A11', 'VentHoleDepthFactor')
+    sheet.set('B11', '1.1')  # Depth factor slightly greater than 1 to make the vent hole greater than all surfaces for the Vent Section to extrude.
+    sheet.set('C11', 'Factor to control the depth of the vent hole')
+    
+    #################################################################################
+    #              ***     Global Aliases Parameters     ***
+    #
+    # Set aliases for all parameters
     sheet.setAlias('B1', 'Diameter')
     sheet.setAlias('B2', 'Height')
     sheet.setAlias('B3', 'WallThickness')
     sheet.setAlias('B4', 'FluteCount')
     sheet.setAlias('B5', 'FluteDepth')
     sheet.setAlias('B6', 'FluteWidth')
+    sheet.setAlias('B7', 'VentHoleDiameter')
+    sheet.setAlias('B8', 'VentSurfaceDiameter')
+    sheet.setAlias('B9', 'VentSurfaceHeight')
+    sheet.setAlias('B10', 'VentHoleHeight')
+    sheet.setAlias('B11', 'VentHoleDepthFactor')
     
     doc.recompute()
     
-    # Create the body object first
+    # Create the body object
     body = doc.addObject("Part::Feature", "Body")
     
     # Read parameters
@@ -53,6 +77,11 @@ def create_curved_mjc():
     flute_count = int(sheet.get('B4'))
     flute_depth = float(sheet.get('B5'))
     flute_width = float(sheet.get('B6'))
+    vent_hole_diameter = float(sheet.get('B7'))
+    vent_surface_diameter = float(sheet.get('B8'))
+    vent_surface_height = float(sheet.get('B9'))
+    vent_hole_height = float(sheet.get('B10'))
+    vent_hole_depth_factor = float(sheet.get('B11'))
     
     # Create base cylinders
     outer_cylinder = Part.makeCylinder(outer_radius, height)
@@ -61,42 +90,48 @@ def create_curved_mjc():
     # Create curved flutes
     for i in range(flute_count):
         angle = 360.0 / flute_count * i
-        
-        # Create points for curved profile
         points = []
-        steps = 16  # Resolution of curve
-        
-        # Start point at outer radius
+        steps = 16
         points.append(App.Vector(outer_radius, -flute_width/2, 0))
-        
-        # Create curved section
         for j in range(steps + 1):
             t = j * math.pi / steps
             x = outer_radius - flute_depth * math.sin(t)
             y = flute_width/2 * math.cos(t)
             points.append(App.Vector(x, y, 0))
-        
-        # End point at outer radius
         points.append(App.Vector(outer_radius, flute_width/2, 0))
-        
-        # Create wire from points
         wire = Part.makePolygon(points)
         face = Part.Face(Part.Wire([wire]))
-        
-        # Extrude profile
         flute = face.extrude(App.Vector(0, 0, height))
-        
-        # Rotate to position
         flute.rotate(App.Vector(0,0,0), App.Vector(0,0,1), angle)
-        
-        # Cut flute from cylinder
         outer_cylinder = outer_cylinder.cut(flute)
     
-    # Create final shape
-    final_shape = outer_cylinder.cut(inner_cylinder)
-    body.Shape = final_shape
+    # Create main shape before adding vent features
+    main_shape = outer_cylinder.cut(inner_cylinder)
     
-    # Update view
+    # Create filter patch surface
+    # Start exactly at outer wall surface
+    filter_patch = Part.makeCylinder(
+        vent_surface_diameter/2,
+        vent_surface_height,
+        App.Vector(outer_radius - vent_surface_height, 0, vent_hole_height),
+        App.Vector(1,0,0)
+    )
+    
+    # Fuse the main shape and filter patch
+    fused_shape = main_shape.fuse(filter_patch).removeSplitter()
+    
+    # Create vent hole (through entire coupler)
+    vent_hole = Part.makeCylinder(
+        vent_hole_diameter/2,
+        outer_radius * vent_hole_depth_factor,  # Depth based on outer radius and depth factor
+        App.Vector(0, 0, vent_hole_height),  # Start from the center
+        App.Vector(1,0,0)
+    )
+    
+    # Cut the vent hole from the fused shape
+    final_shape = fused_shape.cut(vent_hole)
+    
+    body.Shape = final_shape
     doc.recompute()
     
     try:
@@ -109,7 +144,7 @@ def create_curved_mjc():
     return doc
 
 if __name__ == '__main__':
-    print("Starting creation of curved flute design...")
+    print("Starting creation of curved flute design with vent hole...")
     try:
         doc = create_curved_mjc()
         if doc:
