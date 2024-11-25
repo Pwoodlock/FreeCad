@@ -3,9 +3,6 @@
 - Designed in[ FreeCad 1.0.0](https://www.freecad.org/)
 - Python 3.11 included with [AppImage](https://www.freecad.org/downloads.php)
 
-
-
-
 Contributors:
 ---
 - Patrick Woodlock
@@ -19,10 +16,13 @@ Contributors:
 
 
 
+
+
+
 > Main goals for this project are as follows
 - [x] Parametric Input via SpreadSheet
 - [x] Breakpoint and debugging options.
-- [ ] Flat surface to both be used with a Rotating Jar Tilting Machine & to house the synthetic filter that's also parametric to suit peoples needs.
+- [ ] Flat surface for both be used with a Rotating Jar Tilting Machine & to house the synthetic filter that's also parametric to suit peoples needs.
 - [ ] Mason Wide Mouth Threads
 - [ ] Mason Standard Mouth Threads
 - [ ] Various Other Standard Autoclave Resistant Jars Threads
@@ -131,8 +131,8 @@ doc.recompute()
 
 
 ---
+![[MasonJarCoupler/images/Screenshot_20241125_182536.png]]
 
-![[Screenshot_20241125_182536.png]]
 
 
 
